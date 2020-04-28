@@ -1,0 +1,57 @@
+plugins {
+	id 'org.springframework.boot' version '2.2.6.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+	id 'java'
+}
+
+group = 'com.github.kaltura.automation'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+configurations {
+	developmentOnly
+	runtimeClasspath {
+		extendsFrom developmentOnly
+	}
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework:spring-oxm:5.2.5.RELEASE'
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.10.3'
+	implementation 'com.thoughtworks.xstream:xstream:1.4.12'
+	implementation 'com.google.guava:guava:29.0-jre'
+	implementation 'com.fasterxml.jackson.module:jackson-module-jsonSchema:2.10.3'
+
+	implementation 'org.springdoc:springdoc-openapi-core:1.1.49'
+	implementation 'org.springdoc:springdoc-openapi-ui:1.1.49'
+
+
+	implementation 'org.xmlunit:xmlunit-core:2.6.4'
+	implementation 'org.xmlunit:xmlunit-matchers:2.6.4'
+
+
+	compile group: 'org.hibernate', name: 'hibernate-core', version: '5.4.14.Final'
+
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'com.h2database:h2'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+}
+
+test {
+	useJUnitPlatform()
+}
