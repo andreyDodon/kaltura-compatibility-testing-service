@@ -5,17 +5,19 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
-import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.github.kaltura.automation.KalturaCompatibilityService.db.model.Classes;
 import com.github.kaltura.automation.KalturaCompatibilityService.db.model.Enums;
+import com.github.kaltura.automation.KalturaCompatibilityService.db.model.Errors;
 import com.github.kaltura.automation.KalturaCompatibilityService.db.model.Services;
 import com.github.kaltura.automation.KalturaCompatibilityService.db.service.ClassesService;
 import com.github.kaltura.automation.KalturaCompatibilityService.db.service.EnumsService;
+import com.github.kaltura.automation.KalturaCompatibilityService.db.service.ErrorsService;
 import com.github.kaltura.automation.KalturaCompatibilityService.db.service.ServiceService;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaClass.KalturaClasses;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaEnum.EnumConst;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaEnum.KalturaEnum;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaEnum.KalturaEnums;
+import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaError.KalturaError;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaService.KalturaService;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaXml;
 import org.slf4j.Logger;
@@ -50,6 +52,8 @@ public class XmlConverter {
     private ObjectMapper objectMapper;
     @Autowired
     private ServiceService serviceService;
+    @Autowired
+    private ErrorsService errorsService;
 
 
     public void saveKalturaEnums(List<KalturaEnum> kalturaEnumList) {
@@ -88,7 +92,15 @@ public class XmlConverter {
     }
 
 
-
+    public void saveKalturaErrors(List<KalturaError> kalturaErrors) {
+        errorsService.deleteAll();
+        kalturaErrors.forEach(e -> {
+            Errors errors = new Errors();
+            errors.setName(e.getErrorName());
+            errors.setData(writeValueAsString(e));
+            errorsService.saveOrUpdate(errors);
+        });
+    }
 
 
     public String writeValueAsString(Object value) {

@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -81,6 +80,7 @@ public class CompatibilityServiceController {
 
 
         xmlConverter.saveKalturaServices(kalturaXml.getKalturaServices().getKalturaServices());
+        xmlConverter.saveKalturaErrors(kalturaXml.getKalturaErrors().getKalturaErrors());
 
         return resp;
 
@@ -105,8 +105,6 @@ public class CompatibilityServiceController {
         });
         return detailsList;
     }
-
-
 
 
     private Map<String, MapDifference.ValueDifference<KalturaEnum>> findDifferencesBetweenEnums(URL xmlUrl1, URL xmlUrl2) throws IOException {
