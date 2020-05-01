@@ -1,9 +1,7 @@
 package com.github.kaltura.automation.KalturaCompatibilityService.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
-import com.fasterxml.jackson.module.jsonSchema.types.*;
-import com.github.kaltura.automation.KalturaCompatibilityService.XmlConverter;
+import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.github.kaltura.automation.KalturaCompatibilityService.db.model.Classes;
 import com.github.kaltura.automation.KalturaCompatibilityService.db.model.Enums;
 import com.github.kaltura.automation.KalturaCompatibilityService.db.service.ClassesService;
@@ -13,6 +11,9 @@ import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaEn
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaService.KalturaService;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaXml;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.serviceController.CompareClientXmlRequest;
+import com.github.kaltura.automation.KalturaCompatibilityService.model.serviceController.CompareClientXmlResponse;
+import com.github.kaltura.automation.KalturaCompatibilityService.utils.XmlConverter;
+import com.github.kaltura.automation.KalturaCompatibilityService.utils.serialization.KalturaClassesSerializationUtils;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -49,6 +51,8 @@ public class CompatibilityServiceController {
     private ClassesService classesService;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private KalturaClassesSerializationUtils kalturaClassesSerializationUtils;
 
 
     @PostMapping(path = "/parseClientXml", consumes = "application/json", produces = "application/json")
@@ -57,30 +61,52 @@ public class CompatibilityServiceController {
     }
 
     @PostMapping(path = "/compareXml", consumes = "application/json", produces = "application/json")
-    public Map<String, MapDifference.ValueDifference<KalturaEnum>> compareXml(@RequestBody CompareClientXmlRequest compareClientXmlRequest) throws IOException {
+    @ResponseBody
+    public CompareClientXmlResponse compareXml(@RequestBody CompareClientXmlRequest compareClientXmlRequest) throws IOException {
+        CompareClientXmlResponse resp = new CompareClientXmlResponse();
 
-        Map<String, MapDifference.ValueDifference<KalturaEnum>> enumDiff = findDifferencesBetweenEnums(compareClientXmlRequest.getClientXmlUrl(), compareClientXmlRequest.getCompatibleToUrl());
+        Map<String, MapDifference.ValueDifference<KalturaEnum>> enumDifferences =
+                findDifferencesBetweenEnums(compareClientXmlRequest.getClientXmlUrl(), compareClientXmlRequest.getCompatibleToUrl());
+
+        resp.getRed().addAndGet(enumDifferences.size());
+        resp.setDetailsList(getEnumDetails(enumDifferences));
+
+        Map<String, MapDifference.ValueDifference<KalturaClasses.KalturaClass>> classDifferences =
+                kalturaClassesSerializationUtils.findDifferencesBetweenClasses(compareClientXmlRequest.getClientXmlUrl(),
+                        compareClientXmlRequest.getCompatibleToUrl());
+
+        resp.getRed().addAndGet(classDifferences.size());
+        resp.setDetailsList(kalturaClassesSerializationUtils.getClassDetails(classDifferences));
 
         KalturaXml kalturaXml = xmlConverter.xmlToObject(compareClientXmlRequest.getClientXmlUrl());
         xmlConverter.saveKalturaServices(kalturaXml.getKalturaServices().getKalturaServices());
 
-        classesService.deleteAll();
-        getKalturaClassesMap(compareClientXmlRequest.getClientXmlUrl()).forEach((k, v) -> {
-            ObjectSchema objectSchema = getObjectSchema(v);
-            xmlConverter.saveKalturaClassSchema(k, v.getClassDescription(), objectSchema);
-            objectSchemas.add(objectSchema);
+        return resp;
+
+    }
+
+
+    public List<CompareClientXmlResponse.Details> getEnumDetails(Map<String, MapDifference.ValueDifference<KalturaEnum>> valueDifferenceMap) {
+        List<CompareClientXmlResponse.Details> detailsList = new ArrayList<>();
+        valueDifferenceMap.forEach((k, v) -> {
+            CompareClientXmlResponse.Details details = new CompareClientXmlResponse.Details();
+            details.setObjectName("(enum) " + k);
+            List<CompareClientXmlResponse.Details.Differences> differencesList = new ArrayList<>();
+            v.leftValue().diff(v.rightValue()).forEach(d -> {
+                CompareClientXmlResponse.Details.Differences differences = new CompareClientXmlResponse.Details.Differences();
+                differences.setFieldName(d.getFieldName());
+                differences.setOldValue(d.getLeft().toString());
+                differences.setNewValue(d.getRight().toString());
+                differencesList.add(differences);
+            });
+            details.setDifferencesList(differencesList);
+            detailsList.add(details);
         });
-
-        return enumDiff;
-
+        return detailsList;
     }
 
-    private Map<String, KalturaClasses.KalturaClass> getKalturaClassesMap(URL xmlUrl) throws IOException {
-        kalturaClassesMap.clear();
-        kalturaClassesMap = xmlConverter.xmlToObject(xmlUrl).
-                getKalturaClasses().getKalturaClass().stream().collect(Collectors.toMap(KalturaClasses.KalturaClass::getClassName, c -> c));
-        return kalturaClassesMap;
-    }
+
+
 
     private Map<String, MapDifference.ValueDifference<KalturaEnum>> findDifferencesBetweenEnums(URL xmlUrl1, URL xmlUrl2) throws IOException {
         MapDifference<String, KalturaEnum> diff = Maps.difference(getKalturaEnumsMap(xmlUrl1), getKalturaEnumsMap(xmlUrl2));
@@ -95,51 +121,6 @@ public class CompatibilityServiceController {
     private Map<String, KalturaService> getKalturaServicesMap(URL url) throws IOException {
         return xmlConverter.xmlToObject(url).
                 getKalturaServices().getKalturaServices().stream().collect(Collectors.toMap(KalturaService::getServiceName, s -> s));
-    }
-
-    private ObjectSchema getObjectSchema(KalturaClasses.KalturaClass c) {
-        ObjectSchema objectSchema = new ObjectSchema();
-        final Map<String, JsonSchema> objectProperties = new HashMap<>();
-
-        c.getClassProperties().forEach(p -> {
-            if (p.getPropertyType().equals("int") || p.getPropertyType().equals("bigint")) {
-                objectProperties.put(p.getPropertyName(), getSchema(new IntegerSchema(), p));
-            }
-            if (p.getPropertyType().equals("string")) {
-                objectProperties.put(p.getPropertyName(), getSchema(new StringSchema(), p));
-            }
-            if (p.getPropertyType().equals("bool")) {
-                objectProperties.put(p.getPropertyName(), getSchema(new BooleanSchema(), p));
-            }
-            if (p.getPropertyType().equals("float")) {
-                objectProperties.put(p.getPropertyName(), getSchema(new NumberSchema(), p));
-            }
-            if (p.getPropertyType().equals("array")) {
-                objectProperties.put(p.getPropertyName(), getSchema(new ArraySchema(), p));
-            }
-            if (p.getPropertyType().startsWith("Kaltura")) {
-                if (!p.getPropertyType().equals(c.getClassName())) {
-                    objectSchema.addSchemaDependency(p.getPropertyType(),
-                            getObjectSchema(kalturaClassesMap.get(p.getPropertyType())));
-                }
-                JsonSchema schema = getSchema(new ObjectSchema(), p);
-                schema.set$ref("#/dependencies/" + p.getPropertyType());
-                objectProperties.put(p.getPropertyName(), schema);
-            }
-
-
-        });
-        objectSchema.setId(c.getClassName());
-        objectSchema.setDescription(c.getClassDescription());
-        objectSchema.setProperties(objectProperties);
-        return objectSchema;
-    }
-
-
-    private JsonSchema getSchema(JsonSchema jsonSchema, KalturaClasses.KalturaClass.ClassProperty p) {
-        jsonSchema.setDescription(p.getPropertyDescription());
-        jsonSchema.setReadonly(Boolean.getBoolean(p.getPropertyReadOnly()));
-        return jsonSchema;
     }
 
 

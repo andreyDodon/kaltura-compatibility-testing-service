@@ -1,4 +1,4 @@
-package com.github.kaltura.automation.KalturaCompatibilityService;
+package com.github.kaltura.automation.KalturaCompatibilityService.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -30,7 +30,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -89,14 +88,7 @@ public class XmlConverter {
     }
 
 
-    public void saveKalturaClassSchema(String className, String classDescription, ObjectSchema objectSchema){
 
-        Classes classes = new Classes();
-        classes.setName(className);
-        classes.setDescription(classDescription);
-        classes.setData(writeValueAsString(objectSchema));
-        classesService.saveOrUpdate(classes);
-    }
 
 
     public String writeValueAsString(Object value) {

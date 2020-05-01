@@ -2,6 +2,7 @@ package com.github.kaltura.automation.KalturaCompatibilityService.db.service;
 
 import com.github.kaltura.automation.KalturaCompatibilityService.db.model.Enums;
 import com.github.kaltura.automation.KalturaCompatibilityService.db.repository.EnumsRepository;
+import com.github.kaltura.automation.KalturaCompatibilityService.db.service.interfaces.IEnumService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

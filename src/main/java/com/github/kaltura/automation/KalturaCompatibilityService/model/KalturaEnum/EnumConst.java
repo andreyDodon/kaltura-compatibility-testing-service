@@ -1,6 +1,10 @@
 package com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaEnum;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.builder.DiffBuilder;
+import org.apache.commons.lang3.builder.DiffResult;
+import org.apache.commons.lang3.builder.Diffable;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -10,7 +14,7 @@ import java.util.Objects;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name = "const")
-public class EnumConst {
+public class EnumConst implements Diffable<EnumConst> {
 
     @JsonProperty(required = true)
     @XmlAttribute(name = "name", required = true)
@@ -47,5 +51,13 @@ public class EnumConst {
     @Override
     public int hashCode() {
         return Objects.hash(constName, constValue);
+    }
+
+    @Override
+    public DiffResult diff(EnumConst other) {
+        DiffBuilder db = new DiffBuilder(this, other, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append(this.constName, this.constName, other.constName)
+                .append(this.constName + ".value", this.constValue, other.constValue);
+        return db.build();
     }
 }

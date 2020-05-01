@@ -1,6 +1,10 @@
 package com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaClass;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.builder.DiffBuilder;
+import org.apache.commons.lang3.builder.DiffResult;
+import org.apache.commons.lang3.builder.Diffable;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
@@ -27,7 +31,7 @@ public class KalturaClasses {
 
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlRootElement(name = "class")
-    public static class KalturaClass {
+    public static class KalturaClass implements Diffable<KalturaClass> {
 
         @JsonProperty(required = true)
         @XmlAttribute(name = "name", required = true)
@@ -104,10 +108,52 @@ public class KalturaClasses {
             this.base = base;
         }
 
+        @Override
+        public DiffResult diff(KalturaClass other) {
+
+            DiffBuilder db = new DiffBuilder(this, other, ToStringStyle.SHORT_PREFIX_STYLE)
+                    .append("class.name", this.className, other.className)
+                    .append("class.description", this.classDescription, other.classDescription)
+                    .append("class.abstract", this.isAbstract, other.isAbstract)
+                    .append("class.base", this.base, other.base);
+            if (other.getClassProperties().size() > this.getClassProperties().size()) {
+                db.append("class properties more than expected", this.classProperties.size(), other.classProperties.size());
+            } else if (other.getClassProperties().size() < this.getClassProperties().size()) {
+                db.append("class properties less than expected", this.classProperties.size(), other.classProperties.size());
+            } else if (this.getClassProperties().size() == other.getClassProperties().size()) {
+                for (int i = 0; i < this.getClassProperties().size(); i++) {
+                    db.append("class.properties", this.getClassProperties().get(i).diff(other.getClassProperties().get(i)));
+                }
+            }
+
+            return db.build();
+        }
+
+//        public void checkCompatibility(KalturaClass other) {
+//            Map<String, Integer> compatibilityResult = Map.of("RED",0, "YELLOW", 0);
+//            DiffBuilder db = new DiffBuilder(this, other, ToStringStyle.SHORT_PREFIX_STYLE)
+//                    .append("ClassName", this.className, other.className)
+//                    .append("ClassDescription", this.classDescription, other.classDescription)
+//                    .append("IsAbstract", this.isAbstract, other.isAbstract)
+//                    .append("Base", this.base, other.base);
+//            if (this.classProperties.size() > other.classProperties.size()) {
+//                compatibilityResult.merge("RED",1, Integer::sum);
+//            }
+//            if (other.classProperties.size() > this.classProperties.size()) {
+//                compatibilityResult.merge("YELLOW",1, Integer::sum);
+//            }
+//            if(!other.classProperties.containsAll(this.classProperties)){
+//                classProperties.forEach(cp -> {
+//                    db.append("", cp.propertyName, )
+//                });
+//            }
+//
+//        }
+
 
         @XmlAccessorType(XmlAccessType.FIELD)
         @XmlRootElement(name = "property")
-        public static class ClassProperty {
+        public static class ClassProperty implements Diffable<ClassProperty> {
 
             @JsonProperty(required = true)
             @XmlAttribute(name = "name", required = true)
@@ -197,6 +243,18 @@ public class KalturaClasses {
 
             public void setValuesMinValue(String valuesMinValue) {
                 this.valuesMinValue = valuesMinValue;
+            }
+
+            @Override
+            public DiffResult diff(ClassProperty other) {
+                DiffBuilder db = new DiffBuilder(this, other, ToStringStyle.SHORT_PREFIX_STYLE)
+                        .append(this.propertyName, this.propertyName, other.propertyName)
+                        .append(this.propertyName + ".description", this.propertyDescription, other.propertyDescription)
+                        .append(this.propertyName + ".insertOnly", this.propertyInsertOnly, other.propertyInsertOnly)
+                        .append(this.propertyName + ".readOnly", this.propertyReadOnly, other.propertyReadOnly)
+                        .append(this.propertyName + ".type", this.propertyType, other.propertyType)
+                        .append(this.propertyName + ".valuesMinValue", this.valuesMinValue, other.valuesMinValue);
+                return db.build();
             }
         }
     }

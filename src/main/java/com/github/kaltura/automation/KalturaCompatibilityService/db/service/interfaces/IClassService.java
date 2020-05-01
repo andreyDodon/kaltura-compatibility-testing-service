@@ -1,4 +1,4 @@
-package com.github.kaltura.automation.KalturaCompatibilityService.db.service;
+package com.github.kaltura.automation.KalturaCompatibilityService.db.service.interfaces;
 
 import com.github.kaltura.automation.KalturaCompatibilityService.db.model.Classes;
 

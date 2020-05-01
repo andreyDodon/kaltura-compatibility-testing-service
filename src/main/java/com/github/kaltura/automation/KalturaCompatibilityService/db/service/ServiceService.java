@@ -2,6 +2,7 @@ package com.github.kaltura.automation.KalturaCompatibilityService.db.service;
 
 import com.github.kaltura.automation.KalturaCompatibilityService.db.model.Services;
 import com.github.kaltura.automation.KalturaCompatibilityService.db.repository.ServicesRepository;
+import com.github.kaltura.automation.KalturaCompatibilityService.db.service.interfaces.IServiceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

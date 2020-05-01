@@ -1,64 +1,54 @@
 {
   "type" : "object",
-  "id" : "KalturaRequestConfiguration",
-  "description" : "Define client request optional configurations",
+  "id" : "KalturaUserSocialActionResponse",
   "dependencies" : {
-    "KalturaBaseResponseProfile" : {
-      "id" : "KalturaBaseResponseProfile",
-      "description" : "Define base profile response -  optional configurations"
-    },
-    "KalturaSkipCondition" : {
-      "id" : "KalturaSkipCondition",
-      "description" : "Skip current request according to skip condition"
+    "KalturaSocialAction" : {
+      "id" : "KalturaSocialAction",
+      "properties" : {
+        "actionType" : {
+          "type" : "string",
+          "readonly" : false,
+          "description" : "Action type"
+        },
+        "assetId" : {
+          "type" : "integer",
+          "readonly" : false,
+          "description" : "ID of the asset that was acted upon"
+        },
+        "id" : {
+          "type" : "string",
+          "readonly" : false,
+          "description" : "social action document id"
+        },
+        "time" : {
+          "type" : "integer",
+          "readonly" : false,
+          "description" : "EPOC based timestamp for when the action occurred"
+        },
+        "url" : {
+          "type" : "string",
+          "readonly" : false,
+          "description" : "The value of the url"
+        },
+        "assetType" : {
+          "type" : "string",
+          "readonly" : false,
+          "description" : "Type of the asset that was acted upon, currently only VOD (media)"
+        }
+      }
     }
   },
   "properties" : {
-    "abortOnError" : {
-      "type" : "boolean",
+    "failStatus" : {
+      "type" : "array",
       "readonly" : false,
-      "description" : "Abort the Multireuqset call if any error occurs in one of the requests"
+      "description" : "List of action permission items"
     },
-    "responseProfile" : {
+    "socialAction" : {
       "type" : "object",
-      "$ref" : "KalturaBaseResponseProfile",
+      "$ref" : "#/dependencies/KalturaSocialAction",
       "readonly" : false,
-      "description" : "Kaltura response profile object"
-    },
-    "abortAllOnError" : {
-      "type" : "boolean",
-      "readonly" : false,
-      "description" : "Abort all following requests in Multireuqset if current request has an error"
-    },
-    "ks" : {
-      "type" : "string",
-      "readonly" : false,
-      "description" : "Kaltura API session"
-    },
-    "language" : {
-      "type" : "string",
-      "readonly" : false,
-      "description" : "Content language"
-    },
-    "currency" : {
-      "type" : "string",
-      "readonly" : false,
-      "description" : "Currency to be used"
-    },
-    "skipCondition" : {
-      "type" : "object",
-      "$ref" : "KalturaSkipCondition",
-      "readonly" : false,
-      "description" : "Skip current request according to skip condition"
-    },
-    "partnerId" : {
-      "type" : "integer",
-      "readonly" : false,
-      "description" : "Impersonated partner id"
-    },
-    "userId" : {
-      "type" : "integer",
-      "readonly" : false,
-      "description" : "Impersonated user id"
+      "description" : "socialAction"
     }
   }
 }

@@ -1,6 +1,10 @@
 package com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaEnum;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.builder.DiffBuilder;
+import org.apache.commons.lang3.builder.DiffResult;
+import org.apache.commons.lang3.builder.Diffable;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import javax.xml.bind.annotation.*;
 import java.util.List;
@@ -8,7 +12,7 @@ import java.util.Objects;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name = "enum")
-public class KalturaEnum {
+public class KalturaEnum implements Diffable<KalturaEnum> {
 
     @JsonProperty(required = true)
     @XmlAttribute(name = "name", required = true)
@@ -62,4 +66,20 @@ public class KalturaEnum {
     }
 
 
+    @Override
+    public DiffResult diff(KalturaEnum other) {
+        DiffBuilder db = new DiffBuilder(this, other, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("enum.name", this.enumName, other.enumName)
+                .append("enum.type", this.enumType, other.enumType);
+        if (other.getEnumConsts().size() > this.getEnumConsts().size()) {
+            db.append("enum constances more than expected", this.enumConsts.size(), other.enumConsts.size());
+        } else if (other.getEnumConsts().size() < this.getEnumConsts().size()) {
+            db.append("enum constances less than expected", this.enumConsts.size(), other.enumConsts.size());
+        } else if (this.getEnumConsts().size() == other.getEnumConsts().size()) {
+            for (int i = 0; i < this.getEnumConsts().size(); i++) {
+                db.append("enum.const", this.getEnumConsts().get(i).diff(other.getEnumConsts().get(i)));
+            }
+        }
+        return db.build();
+    }
 }
