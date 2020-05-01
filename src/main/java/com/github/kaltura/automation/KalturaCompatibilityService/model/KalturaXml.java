@@ -2,6 +2,7 @@ package com.github.kaltura.automation.KalturaCompatibilityService.model;
 
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaClass.KalturaClasses;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaEnum.KalturaEnums;
+import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaError.KalturaErrors;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaService.KalturaServices;
 
 import javax.xml.bind.annotation.*;
@@ -25,6 +26,9 @@ public class KalturaXml {
 
     @XmlElement(name = "services")
     private KalturaServices kalturaServices;
+
+    @XmlElement(name = "errors")
+    private KalturaErrors kalturaErrors;
 
 
 
@@ -72,5 +76,13 @@ public class KalturaXml {
 
     public void setKalturaServices(KalturaServices kalturaServices) {
         this.kalturaServices = kalturaServices;
+    }
+
+    public KalturaErrors getKalturaErrors() {
+        return kalturaErrors;
+    }
+
+    public void setKalturaErrors(KalturaErrors kalturaErrors) {
+        this.kalturaErrors = kalturaErrors;
     }
 }

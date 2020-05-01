@@ -64,6 +64,7 @@ public class CompatibilityServiceController {
     @ResponseBody
     public CompareClientXmlResponse compareXml(@RequestBody CompareClientXmlRequest compareClientXmlRequest) throws IOException {
         CompareClientXmlResponse resp = new CompareClientXmlResponse();
+        KalturaXml kalturaXml = xmlConverter.xmlToObject(compareClientXmlRequest.getClientXmlUrl());
 
         Map<String, MapDifference.ValueDifference<KalturaEnum>> enumDifferences =
                 findDifferencesBetweenEnums(compareClientXmlRequest.getClientXmlUrl(), compareClientXmlRequest.getCompatibleToUrl());
@@ -78,7 +79,7 @@ public class CompatibilityServiceController {
         resp.getRed().addAndGet(classDifferences.size());
         resp.setDetailsList(kalturaClassesSerializationUtils.getClassDetails(classDifferences));
 
-        KalturaXml kalturaXml = xmlConverter.xmlToObject(compareClientXmlRequest.getClientXmlUrl());
+
         xmlConverter.saveKalturaServices(kalturaXml.getKalturaServices().getKalturaServices());
 
         return resp;

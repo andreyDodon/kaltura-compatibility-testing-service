@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface EnumsRepository extends CrudRepository<Enums, Long> {
 
-    @Query(value = "select e from ENUMS e where e.name = :name", nativeQuery = true)
+    @Query(value = "select e.DATA from ENUMS e where e.name = :name", nativeQuery = true)
     List<Enums> findByName(@Param("name") String chars);
 
 }
