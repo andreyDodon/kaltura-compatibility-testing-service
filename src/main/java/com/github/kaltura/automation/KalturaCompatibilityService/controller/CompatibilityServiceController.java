@@ -8,6 +8,7 @@ import com.github.kaltura.automation.KalturaCompatibilityService.db.service.Clas
 import com.github.kaltura.automation.KalturaCompatibilityService.db.service.EnumsService;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaClass.KalturaClasses;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaEnum.KalturaEnum;
+import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaError.KalturaError;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaService.KalturaService;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaXml;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.serviceController.CompareClientXmlRequest;
@@ -63,24 +64,41 @@ public class CompatibilityServiceController {
     @ResponseBody
     public CompareClientXmlResponse compareXml(@RequestBody CompareClientXmlRequest compareClientXmlRequest) throws IOException {
         CompareClientXmlResponse resp = new CompareClientXmlResponse();
-        KalturaXml kalturaXml = xmlConverter.xmlToObject(compareClientXmlRequest.getClientXmlUrl());
+        KalturaXml kalturaXml1 = xmlConverter.xmlToObject(compareClientXmlRequest.getClientXmlUrl());
+        KalturaXml kalturaXml2 = xmlConverter.xmlToObject(compareClientXmlRequest.getCompatibleToUrl());
+
+        Map<String, KalturaError> stringKalturaErrorMap1 = kalturaXml1.getKalturaErrors().getKalturaErrors().stream().collect(Collectors.toMap(KalturaError::getErrorName, e -> e));
+        Map<String, KalturaError> stringKalturaErrorMap2 = kalturaXml2.getKalturaErrors().getKalturaErrors().stream().collect(Collectors.toMap(KalturaError::getErrorName, e -> e));
+
+        Map<String, MapDifference.ValueDifference<KalturaError>> errorDifferences =
+                findDifferencesBetweenErrors(stringKalturaErrorMap1, stringKalturaErrorMap2);
+
+        resp.getRed().addAndGet(errorDifferences.size());
+        resp.setDetailsList(getErrorDetails(errorDifferences));
+
+        Map<String, KalturaEnum> stringKalturaEnumMap1 = kalturaXml1.getKalturaEnums().getKalturaEnums().stream().collect(Collectors.toMap(KalturaEnum::getEnumName, e -> e));
+        Map<String, KalturaEnum> stringKalturaEnumMap2 = kalturaXml2.getKalturaEnums().getKalturaEnums().stream().collect(Collectors.toMap(KalturaEnum::getEnumName, e -> e));
 
         Map<String, MapDifference.ValueDifference<KalturaEnum>> enumDifferences =
-                findDifferencesBetweenEnums(compareClientXmlRequest.getClientXmlUrl(), compareClientXmlRequest.getCompatibleToUrl());
+                findDifferencesBetweenEnums(stringKalturaEnumMap1, stringKalturaEnumMap2);
 
         resp.getRed().addAndGet(enumDifferences.size());
         resp.setDetailsList(getEnumDetails(enumDifferences));
 
+
+
+        Map<String, KalturaClasses.KalturaClass> kalturaClassesMap1 = kalturaXml1.getKalturaClasses().getKalturaClass().stream().collect(Collectors.toMap(KalturaClasses.KalturaClass::getClassName, c -> c));
+        Map<String, KalturaClasses.KalturaClass> kalturaClassesMap2 = kalturaXml2.getKalturaClasses().getKalturaClass().stream().collect(Collectors.toMap(KalturaClasses.KalturaClass::getClassName, c -> c));
+
         Map<String, MapDifference.ValueDifference<KalturaClasses.KalturaClass>> classDifferences =
-                kalturaClassesSerializationUtils.findDifferencesBetweenClasses(compareClientXmlRequest.getClientXmlUrl(),
-                        compareClientXmlRequest.getCompatibleToUrl());
+                kalturaClassesSerializationUtils.findDifferencesBetweenClasses(kalturaClassesMap1, kalturaClassesMap2);
 
         resp.getRed().addAndGet(classDifferences.size());
         resp.setDetailsList(kalturaClassesSerializationUtils.getClassDetails(classDifferences));
 
 
-        xmlConverter.saveKalturaServices(kalturaXml.getKalturaServices().getKalturaServices());
-        xmlConverter.saveKalturaErrors(kalturaXml.getKalturaErrors().getKalturaErrors());
+        xmlConverter.saveKalturaServices(kalturaXml1.getKalturaServices().getKalturaServices());
+        xmlConverter.saveKalturaErrors(kalturaXml1.getKalturaErrors().getKalturaErrors());
 
         return resp;
 
@@ -107,8 +125,35 @@ public class CompatibilityServiceController {
     }
 
 
-    private Map<String, MapDifference.ValueDifference<KalturaEnum>> findDifferencesBetweenEnums(URL xmlUrl1, URL xmlUrl2) throws IOException {
-        MapDifference<String, KalturaEnum> diff = Maps.difference(getKalturaEnumsMap(xmlUrl1), getKalturaEnumsMap(xmlUrl2));
+    public List<CompareClientXmlResponse.Details> getErrorDetails(Map<String, MapDifference.ValueDifference<KalturaError>> valueDifferenceMap) {
+        List<CompareClientXmlResponse.Details> detailsList = new ArrayList<>();
+        valueDifferenceMap.forEach((k, v) -> {
+            CompareClientXmlResponse.Details details = new CompareClientXmlResponse.Details();
+            details.setObjectName("(error) " + k);
+            List<CompareClientXmlResponse.Details.Differences> differencesList = new ArrayList<>();
+            v.leftValue().diff(v.rightValue()).forEach(d -> {
+                CompareClientXmlResponse.Details.Differences differences = new CompareClientXmlResponse.Details.Differences();
+                differences.setFieldName(d.getFieldName());
+                differences.setOldValue(d.getLeft().toString());
+                differences.setNewValue(d.getRight().toString());
+                differencesList.add(differences);
+            });
+            details.setDifferencesList(differencesList);
+            detailsList.add(details);
+        });
+        return detailsList;
+    }
+
+
+    private Map<String, MapDifference.ValueDifference<KalturaEnum>> findDifferencesBetweenEnums(
+            Map<String, KalturaEnum> stringKalturaEnumMap1, Map<String, KalturaEnum> stringKalturaEnumMap2) throws IOException {
+        MapDifference<String, KalturaEnum> diff = Maps.difference(stringKalturaEnumMap1, stringKalturaEnumMap2);
+        return diff.entriesDiffering();
+    }
+
+    private Map<String, MapDifference.ValueDifference<KalturaError>> findDifferencesBetweenErrors(
+            Map<String, KalturaError> stringKalturaErrorMap1, Map<String, KalturaError> stringKalturaErrorMap2) throws IOException {
+        MapDifference<String, KalturaError> diff = Maps.difference(stringKalturaErrorMap1, stringKalturaErrorMap2);
         return diff.entriesDiffering();
     }
 

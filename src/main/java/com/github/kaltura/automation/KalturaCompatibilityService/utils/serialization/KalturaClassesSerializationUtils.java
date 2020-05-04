@@ -41,9 +41,10 @@ public class KalturaClassesSerializationUtils extends KalturaSerialization {
     }
 
 
-    public Map<String, MapDifference.ValueDifference<KalturaClasses.KalturaClass>> findDifferencesBetweenClasses(URL xmlUrl1, URL xmlUrl2) throws IOException {
+    public Map<String, MapDifference.ValueDifference<KalturaClasses.KalturaClass>> findDifferencesBetweenClasses(
+            Map<String, KalturaClasses.KalturaClass> kalturaClassesMap1, Map<String, KalturaClasses.KalturaClass> kalturaClassesMap2) throws IOException {
         MapDifference<String, KalturaClasses.KalturaClass> diff =
-                Maps.difference(getKalturaClasses(xmlUrl1), getKalturaClasses(xmlUrl2));
+                Maps.difference(kalturaClassesMap1, kalturaClassesMap2);
         return diff.entriesDiffering();
     }
 
