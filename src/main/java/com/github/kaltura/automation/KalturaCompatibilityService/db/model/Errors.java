@@ -16,8 +16,11 @@ public class Errors {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private Integer code;
     @Size(max = 500)
     private String name;
+    @Size(max = 15000)
+    private String description;
     @Size(max = 30000)
     private String data;
 
@@ -43,5 +46,21 @@ public class Errors {
 
     public void setData(String data) {
         this.data = data;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Integer getCode() {
+        return code;
+    }
+
+    public void setCode(Integer code) {
+        this.code = code;
     }
 }

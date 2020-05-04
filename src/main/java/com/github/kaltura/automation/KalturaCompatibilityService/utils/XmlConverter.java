@@ -97,6 +97,8 @@ public class XmlConverter {
         kalturaErrors.forEach(e -> {
             Errors errors = new Errors();
             errors.setName(e.getErrorName());
+            errors.setCode(Integer.valueOf(e.getErrorCode()));
+            errors.setDescription(e.getErrorDescription());
             errors.setData(writeValueAsString(e));
             errorsService.saveOrUpdate(errors);
         });
