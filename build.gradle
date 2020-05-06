@@ -36,6 +36,10 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-core:1.1.49'
 	implementation 'org.springdoc:springdoc-openapi-ui:1.1.49'
 
+	compile 'com.vdurmont:semver4j:3.1.0'
+	compile group: 'org.apache.poi', name: 'poi-ooxml', version: '4.1.2'
+
+
 
 	implementation 'org.xmlunit:xmlunit-core:2.6.4'
 	implementation 'org.xmlunit:xmlunit-matchers:2.6.4'

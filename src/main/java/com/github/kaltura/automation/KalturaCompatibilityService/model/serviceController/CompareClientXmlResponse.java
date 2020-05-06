@@ -12,6 +12,8 @@ public class CompareClientXmlResponse {
     private AtomicInteger yellow = new AtomicInteger(0);
     private AtomicInteger red = new AtomicInteger(0);
     private List<Details> detailsList = new ArrayList<>();
+    private String currentApiVersion;
+    private String previousApiVersion;
 
 
     public AtomicInteger getYellow() {
@@ -36,6 +38,22 @@ public class CompareClientXmlResponse {
 
     public void setDetailsList(List<Details> detailsList) {
         this.detailsList.addAll(detailsList);
+    }
+
+    public String getCurrentApiVersion() {
+        return currentApiVersion;
+    }
+
+    public void setCurrentApiVersion(String currentApiVersion) {
+        this.currentApiVersion = currentApiVersion;
+    }
+
+    public String getPreviousApiVersion() {
+        return previousApiVersion;
+    }
+
+    public void setPreviousApiVersion(String previousApiVersion) {
+        this.previousApiVersion = previousApiVersion;
     }
 
     public static class Details {
@@ -63,8 +81,8 @@ public class CompareClientXmlResponse {
         public static class Differences {
 
             private String fieldName;
-            private String oldValue;
-            private String newValue;
+            private String previousValue;
+            private String currentValue;
 
             public String getFieldName() {
                 return fieldName;
@@ -74,20 +92,20 @@ public class CompareClientXmlResponse {
                 this.fieldName = fieldName;
             }
 
-            public String getOldValue() {
-                return oldValue;
+            public String getPreviousValue() {
+                return previousValue;
             }
 
-            public void setOldValue(String oldValue) {
-                this.oldValue = oldValue;
+            public void setPreviousValue(String previousValue) {
+                this.previousValue = previousValue;
             }
 
-            public String getNewValue() {
-                return newValue;
+            public String getCurrentValue() {
+                return currentValue;
             }
 
-            public void setNewValue(String newValue) {
-                this.newValue = newValue;
+            public void setCurrentValue(String currentValue) {
+                this.currentValue = currentValue;
             }
         }
     }

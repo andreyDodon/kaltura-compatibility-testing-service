@@ -58,6 +58,18 @@ public class KalturaClassesSerializationUtils extends KalturaSerialization {
     }
 
 
+    public void saveKalturaClasses(List<KalturaClasses.KalturaClass> kalturaClassList) {
+        classesService.deleteAll();
+        kalturaClassList.forEach(c -> {
+            Classes classes = new Classes();
+            classes.setName(c.getClassName());
+            classes.setDescription(c.getClassDescription());
+            classes.setData(writeValueAsString(c));
+            classesService.saveOrUpdate(classes);
+        });
+    }
+
+
     public List<CompareClientXmlResponse.Details> getClassDetails(Map<String, MapDifference.ValueDifference<KalturaClasses.KalturaClass>> test) {
         List<CompareClientXmlResponse.Details> detailsList = new ArrayList<>();
         test.forEach((k, v) -> {
@@ -67,8 +79,8 @@ public class KalturaClassesSerializationUtils extends KalturaSerialization {
             v.leftValue().diff(v.rightValue()).forEach(d -> {
                 CompareClientXmlResponse.Details.Differences differences = new CompareClientXmlResponse.Details.Differences();
                 differences.setFieldName(d.getFieldName());
-                differences.setOldValue(d.getLeft().toString());
-                differences.setNewValue(d.getRight().toString());
+                differences.setPreviousValue(d.getLeft().toString());
+                differences.setCurrentValue(d.getRight().toString());
                 differencesList.add(differences);
             });
             details.setDifferencesList(differencesList);

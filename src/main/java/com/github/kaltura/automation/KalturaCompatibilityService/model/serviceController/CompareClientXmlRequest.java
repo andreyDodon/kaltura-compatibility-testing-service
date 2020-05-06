@@ -7,22 +7,22 @@ import java.net.URL;
  */
 public class CompareClientXmlRequest {
 
-    private URL clientXmlUrl;
-    private URL compatibleToUrl;
+    private URL previousXmlUrl;
+    private URL currentXmlUrl;
 
-    public URL getClientXmlUrl() {
-        return clientXmlUrl;
+    public URL getPreviousXmlUrl() {
+        return previousXmlUrl;
     }
 
-    public void setClientXmlUrl(URL clientXmlUrl) {
-        this.clientXmlUrl = clientXmlUrl;
+    public void setPreviousXmlUrl(URL previousXmlUrl) {
+        this.previousXmlUrl = previousXmlUrl;
     }
 
-    public URL getCompatibleToUrl() {
-        return compatibleToUrl;
+    public URL getCurrentXmlUrl() {
+        return currentXmlUrl;
     }
 
-    public void setCompatibleToUrl(URL compatibleToUrl) {
-        this.compatibleToUrl = compatibleToUrl;
+    public void setCurrentXmlUrl(URL currentXmlUrl) {
+        this.currentXmlUrl = currentXmlUrl;
     }
 }

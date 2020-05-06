@@ -14,7 +14,10 @@
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{yyyy-MM-dd} | %d{HH:mm:ss.SSS} | %5p | %logger{25}: %12(ID: %8mdc{id}) | %m%n</pattern>
+            <Pattern>
+                %black(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1.}): %msg%n%throwable
+            </Pattern>
+            <!--            <pattern>%d{yyyy-MM-dd} | %d{HH:mm:ss.SSS} | %5p | %logger{25}: %12(ID: %8mdc{id}) | %m%n</pattern>-->
             <charset>utf8</charset>
         </encoder>
     </appender>
@@ -28,23 +31,18 @@
     <!--        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>-->
     <!--    </appender>-->
 
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
-            </pattern>
-        </encoder>
-    </appender>
 
-
-    <logger name="org.springframework" level="DEBUG" />
-    <logger name="org.springframework.transaction" level="TRACE" />
+    <logger name="org.springframework" level="DEBUG"/>
+    <!--    <logger name="org.springframework.transaction" level="TRACE" />-->
 
     <!-- in order to debug some marshalling issues, this needs to be TRACE -->
-    <logger name="org.springframework.web.servlet.mvc" level="TRACE" />
+    <!--    <logger name="org.springframework.web.servlet.mvc" level="TRACE" />-->
 
     <root level="DEBUG">
-        <appender-ref ref="LOGFILE" />
-        <appender-ref ref="STDOUT" />
-        <!--        <appender-ref ref="STASH" />-->
+        <appender-ref ref="LOGFILE"/>
+<!--        <appender-ref ref="CONSOLE"/>-->
     </root>
+    <logger name="org.springframework" level="DEBUG">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
 </configuration>

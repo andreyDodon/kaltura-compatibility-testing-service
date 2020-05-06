@@ -139,19 +139,5 @@ public class XmlConverter {
     }
 
 
-    public KalturaXml getKalturaXmlObjectForTest() {
-        KalturaXml kalturaXml = new KalturaXml();
-        kalturaXml.setApiVersion("5.3.4.27857");
-        kalturaXml.setGeneratedDate("1587046068");
-        KalturaEnums test = new KalturaEnums();
-        test.setKalturaEnums(new ArrayList<>());
-        KalturaEnum kEnum = new KalturaEnum();
-        kEnum.setEnumConsts(new ArrayList<>());
-        kEnum.getEnumConsts().add(new EnumConst());
-        test.getKalturaEnums().add(kEnum);
-        kalturaXml.setKalturaEnums(test);
-        return kalturaXml;
-    }
-
 
 }
