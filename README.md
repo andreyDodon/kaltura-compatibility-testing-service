@@ -3,7 +3,10 @@
 
 # kaltura-compatibility-testing-service
 
-
+Docker
 1. gradle build -x test
 2. docker build -t springio/kaltura-compatibility-service .
 3. docker run -p 8080:8080 springio/kaltura-compatibility-service
+
+Local
+1. gradle bootRun
