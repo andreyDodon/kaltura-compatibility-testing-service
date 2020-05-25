@@ -18,8 +18,6 @@ import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import com.vdurmont.semver4j.Semver;
 import io.swagger.v3.oas.models.OpenAPI;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +27,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -78,6 +74,7 @@ public class CompatibilityServiceController {
             KalturaXml temp = previousXml;
             previousXml = currentXml;
             currentXml = temp;
+
         }
 
         resp.setPreviousApiVersion(previousXml.getApiVersion());
