@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.xml.bind.annotation.*;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author andrey.dodon - 27/04/2020
@@ -46,7 +47,7 @@ public class ServiceAction {
 
     @JsonProperty
     @XmlElement(name = "result")
-    private List<ActionResult> actionResults;
+    private ActionResult actionResults;
 
 
     public String getActionName() {
@@ -105,16 +106,37 @@ public class ServiceAction {
         this.actionParams = actionParams;
     }
 
-    public List<ActionResult> getActionResults() {
+    public ActionResult getActionResults() {
         return actionResults;
     }
 
-    public void setActionResults(List<ActionResult> actionResults) {
+    public void setActionResults(ActionResult actionResults) {
         this.actionResults = actionResults;
     }
 
     public List<ActionThrows> getActionThrows() {
         return actionThrows;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ServiceAction that = (ServiceAction) o;
+        return actionName.equals(that.actionName) &&
+                Objects.equals(enableInMultiRequest, that.enableInMultiRequest) &&
+                Objects.equals(supportedRequestFormats, that.supportedRequestFormats) &&
+                Objects.equals(supportedResponseFormats, that.supportedResponseFormats) &&
+                Objects.equals(description, that.description) &&
+                Objects.equals(sessionRequired, that.sessionRequired) &&
+                Objects.equals(actionParams, that.actionParams) &&
+                Objects.equals(actionThrows, that.actionThrows) &&
+                Objects.equals(actionResults, that.actionResults);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(actionName, enableInMultiRequest, supportedRequestFormats, supportedResponseFormats, description, sessionRequired, actionParams, actionThrows, actionResults);
     }
 
     public void setActionThrows(List<ActionThrows> actionThrows) {

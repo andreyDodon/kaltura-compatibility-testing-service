@@ -5,18 +5,10 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
-import com.github.kaltura.automation.KalturaCompatibilityService.db.model.Classes;
-import com.github.kaltura.automation.KalturaCompatibilityService.db.model.Enums;
-import com.github.kaltura.automation.KalturaCompatibilityService.db.model.Errors;
-import com.github.kaltura.automation.KalturaCompatibilityService.db.model.Services;
-import com.github.kaltura.automation.KalturaCompatibilityService.db.service.ClassesService;
-import com.github.kaltura.automation.KalturaCompatibilityService.db.service.EnumsService;
-import com.github.kaltura.automation.KalturaCompatibilityService.db.service.ErrorsService;
-import com.github.kaltura.automation.KalturaCompatibilityService.db.service.ServiceService;
-import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaClass.KalturaClasses;
-import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaEnum.EnumConst;
+import com.github.kaltura.automation.KalturaCompatibilityService.db.model.*;
+import com.github.kaltura.automation.KalturaCompatibilityService.db.service.*;
+import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaClass.KalturaClass;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaEnum.KalturaEnum;
-import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaEnum.KalturaEnums;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaError.KalturaError;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaService.KalturaService;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaXml;
@@ -31,7 +23,6 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,6 +45,8 @@ public class XmlConverter {
     private ServiceService serviceService;
     @Autowired
     private ErrorsService errorsService;
+    @Autowired
+    private YellowService yellowService;
 
 
     public void saveKalturaEnums(List<KalturaEnum> kalturaEnumList) {
@@ -68,7 +61,7 @@ public class XmlConverter {
     }
 
 
-    public void saveKalturaClasses(List<KalturaClasses.KalturaClass> kalturaClassList) {
+    public void saveKalturaClasses(List<KalturaClass> kalturaClassList) {
         classesService.deleteAll();
         kalturaClassList.forEach(c -> {
             Classes classes = new Classes();
@@ -105,6 +98,7 @@ public class XmlConverter {
     }
 
 
+
     public String writeValueAsString(Object value) {
         try {
             return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(value);
@@ -121,8 +115,8 @@ public class XmlConverter {
 
     public void xmlToObjectSaveToDb(URL url) throws IOException {
         KalturaXml kalturaXml = (KalturaXml) jaxb2Marshaller.unmarshal(new StreamSource(url.openStream()));
-        saveKalturaEnums(kalturaXml.getKalturaEnums().getKalturaEnums());
-        saveKalturaClasses(kalturaXml.getKalturaClasses().getKalturaClass());
+        saveKalturaEnums(kalturaXml.getKalturaEnums());
+        saveKalturaClasses(kalturaXml.getKalturaClasses());
     }
 
 
@@ -137,7 +131,6 @@ public class XmlConverter {
             jaxb2Marshaller.marshal(graph, new StreamResult(fos));
         }
     }
-
 
 
 }

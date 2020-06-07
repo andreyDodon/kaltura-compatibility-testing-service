@@ -9,6 +9,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import javax.xml.bind.annotation.*;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name = "enum")
@@ -72,12 +73,22 @@ public class KalturaEnum implements Diffable<KalturaEnum> {
                 .append("enum.name", this.enumName, other.enumName)
                 .append("enum.type", this.enumType, other.enumType);
         if (other.getEnumConsts().size() > this.getEnumConsts().size()) {
-            db.append("enum constances more than expected", this.enumConsts.size(), other.enumConsts.size());
+            db.append(String.format("WARNING - enum %s contains more constants - (%d) than expected - (%d)",
+                    other.enumName,
+                    other.enumConsts.size(),
+                    this.enumConsts.size() ),
+                    this.enumConsts.stream().map(EnumConst::getConstName).collect(Collectors.joining(",")),
+                    other.enumConsts.stream().map(EnumConst::getConstName).collect(Collectors.joining(",")));
         } else if (other.getEnumConsts().size() < this.getEnumConsts().size()) {
-            db.append("enum constances less than expected", this.enumConsts.size(), other.enumConsts.size());
+            db.append(String.format("ERROR - enum %s contains less constants - (%d) than expected - (%d)",
+                    other.enumName,
+                    other.enumConsts.size(),
+                    this.enumConsts.size() ),
+                    this.enumConsts.stream().map(EnumConst::getConstName).collect(Collectors.joining(",")),
+                    other.enumConsts.stream().map(EnumConst::getConstName).collect(Collectors.joining(",")));
         } else if (this.getEnumConsts().size() == other.getEnumConsts().size()) {
             for (int i = 0; i < this.getEnumConsts().size(); i++) {
-                db.append("enum.const", this.getEnumConsts().get(i).diff(other.getEnumConsts().get(i)));
+                db.append("ERROR - enum.const", this.getEnumConsts().get(i).diff(other.getEnumConsts().get(i)));
             }
         }
         return db.build();

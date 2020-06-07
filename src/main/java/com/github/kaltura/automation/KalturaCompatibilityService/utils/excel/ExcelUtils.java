@@ -16,6 +16,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -39,8 +40,8 @@ public class ExcelUtils {
     }
 
 
-    private void addEnumsToExcel(KalturaEnums kalturaEnums, XSSFWorkbook workbook) {
-        XSSFSheet sheet = workbook.createSheet("Enums(" + kalturaEnums.getKalturaEnums().size() + ")");
+    private void addEnumsToExcel(List<KalturaEnum> kalturaEnums, XSSFWorkbook workbook) {
+        XSSFSheet sheet = workbook.createSheet("Enums(" + kalturaEnums.size() + ")");
         Row headerRow = sheet.createRow(0);
         Cell headerCell = headerRow.createCell(0);
         headerCell.setCellValue("Enum Name");
@@ -49,7 +50,7 @@ public class ExcelUtils {
         headerCell = headerRow.createCell(2);
         headerCell.setCellValue("Enum consts");
         int rowCount = 0;
-        for (KalturaEnum kalturaEnum : kalturaEnums.getKalturaEnums()) {
+        for (KalturaEnum kalturaEnum : kalturaEnums) {
             fillEnumRow(kalturaEnum, sheet.createRow(rowCount++));
         }
 
@@ -70,8 +71,8 @@ public class ExcelUtils {
     }
 
 
-    private void addErrorsToExcel(KalturaErrors kalturaErrors, XSSFWorkbook workbook) {
-        XSSFSheet sheet = workbook.createSheet("Errors(" + kalturaErrors.getKalturaErrors().size() + ")");
+    private void addErrorsToExcel(List<KalturaError> kalturaErrors, XSSFWorkbook workbook) {
+        XSSFSheet sheet = workbook.createSheet("Errors(" + kalturaErrors.size() + ")");
         Row headerRow = sheet.createRow(0);
         Cell headerCell = headerRow.createCell(0);
         headerCell.setCellValue("Error Name");
@@ -80,7 +81,7 @@ public class ExcelUtils {
         headerCell = headerRow.createCell(2);
         headerCell.setCellValue("Error description");
         int rowCount = 0;
-        for (KalturaError kalturaError : kalturaErrors.getKalturaErrors()) {
+        for (KalturaError kalturaError : kalturaErrors) {
             fillErrorRow(kalturaError, sheet.createRow(rowCount++));
         }
 

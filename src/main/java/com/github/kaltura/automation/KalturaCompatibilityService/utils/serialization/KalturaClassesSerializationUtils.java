@@ -7,16 +7,14 @@ import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
 import com.fasterxml.jackson.module.jsonSchema.types.*;
 import com.github.kaltura.automation.KalturaCompatibilityService.db.model.Classes;
 import com.github.kaltura.automation.KalturaCompatibilityService.db.service.ClassesService;
+import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaClass.ClassProperty;
+import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaClass.KalturaClass;
 import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaClass.KalturaClasses;
-import com.github.kaltura.automation.KalturaCompatibilityService.model.serviceController.CompareClientXmlResponse;
-import com.google.common.collect.MapDifference;
-import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,24 +30,16 @@ public class KalturaClassesSerializationUtils extends KalturaSerialization {
     private ClassesService classesService;
 
 
-    private Map<String, KalturaClasses.KalturaClass> kalturaClassesMap;
+    private Map<String, KalturaClass> kalturaClassesMap;
 
-    public Map<String, KalturaClasses.KalturaClass> getKalturaClasses(URL xmlUrl) throws IOException {
+    public Map<String, KalturaClass> getKalturaClasses(URL xmlUrl) throws IOException {
         kalturaClassesMap = getKalturaXmlObject(xmlUrl).
-                getKalturaClasses().getKalturaClass().stream().collect(Collectors.toMap(KalturaClasses.KalturaClass::getClassName, c -> c));
+                getKalturaClasses().stream().collect(Collectors.toMap(KalturaClass::getClassName, c -> c));
         return kalturaClassesMap;
     }
 
 
-    public Map<String, MapDifference.ValueDifference<KalturaClasses.KalturaClass>> findDifferencesBetweenClasses(
-            Map<String, KalturaClasses.KalturaClass> kalturaClassesMap1, Map<String, KalturaClasses.KalturaClass> kalturaClassesMap2) throws IOException {
-        MapDifference<String, KalturaClasses.KalturaClass> diff =
-                Maps.difference(kalturaClassesMap1, kalturaClassesMap2);
-        return diff.entriesDiffering();
-    }
-
-
-    public Map<String, ObjectSchema> getKalturaClassObjectSchemas(Map<String, KalturaClasses.KalturaClass> kalturaClassesMap) {
+    public Map<String, ObjectSchema> getKalturaClassObjectSchemas(Map<String, KalturaClass> kalturaClassesMap) {
         Map<String, ObjectSchema> classSchemasMap = new HashMap<>();
         kalturaClassesMap.forEach((k, v) -> {
             classSchemasMap.put(k, getKalturaClassObjectSchema(v));
@@ -58,7 +48,7 @@ public class KalturaClassesSerializationUtils extends KalturaSerialization {
     }
 
 
-    public void saveKalturaClasses(List<KalturaClasses.KalturaClass> kalturaClassList) {
+    public void saveKalturaClasses(List<KalturaClass> kalturaClassList) {
         classesService.deleteAll();
         kalturaClassList.forEach(c -> {
             Classes classes = new Classes();
@@ -70,27 +60,7 @@ public class KalturaClassesSerializationUtils extends KalturaSerialization {
     }
 
 
-    public List<CompareClientXmlResponse.Details> getClassDetails(Map<String, MapDifference.ValueDifference<KalturaClasses.KalturaClass>> test) {
-        List<CompareClientXmlResponse.Details> detailsList = new ArrayList<>();
-        test.forEach((k, v) -> {
-            CompareClientXmlResponse.Details details = new CompareClientXmlResponse.Details();
-            details.setObjectName("(class) " + k);
-            List<CompareClientXmlResponse.Details.Differences> differencesList = new ArrayList<>();
-            v.leftValue().diff(v.rightValue()).forEach(d -> {
-                CompareClientXmlResponse.Details.Differences differences = new CompareClientXmlResponse.Details.Differences();
-                differences.setFieldName(d.getFieldName());
-                differences.setPreviousValue(d.getLeft().toString());
-                differences.setCurrentValue(d.getRight().toString());
-                differencesList.add(differences);
-            });
-            details.setDifferencesList(differencesList);
-            detailsList.add(details);
-        });
-        return detailsList;
-    }
-
-
-    public void saveKalturaClassObjectSchemas(Map<String, KalturaClasses.KalturaClass> kalturaClassesMap) {
+    public void saveKalturaClassObjectSchemas(Map<String, KalturaClass> kalturaClassesMap) {
         classesService.deleteAll();
         kalturaClassesMap.forEach((k, v) -> {
             ObjectSchema objectSchema = getKalturaClassObjectSchema(v);
@@ -108,7 +78,7 @@ public class KalturaClassesSerializationUtils extends KalturaSerialization {
     }
 
 
-    private ObjectSchema getKalturaClassObjectSchema(KalturaClasses.KalturaClass c) {
+    private ObjectSchema getKalturaClassObjectSchema(KalturaClass c) {
         ObjectSchema objectSchema = new ObjectSchema();
         final Map<String, JsonSchema> classSchemasMap = new HashMap<>();
 
@@ -146,13 +116,13 @@ public class KalturaClassesSerializationUtils extends KalturaSerialization {
     }
 
 
-    private JsonSchema getSchema(JsonSchema jsonSchema, KalturaClasses.KalturaClass.ClassProperty p) {
+    private JsonSchema getSchema(JsonSchema jsonSchema, ClassProperty p) {
         jsonSchema.setDescription(p.getPropertyDescription());
         jsonSchema.setReadonly(Boolean.getBoolean(p.getPropertyReadOnly()));
         return jsonSchema;
     }
 
-    public JsonSchema getSchema(Class<?> type, KalturaClasses.KalturaClass.ClassProperty p){
+    public JsonSchema getSchema(Class<?> type, ClassProperty p) {
         JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(new ObjectMapper());
         JsonSchema jsonSchema = null;
         try {

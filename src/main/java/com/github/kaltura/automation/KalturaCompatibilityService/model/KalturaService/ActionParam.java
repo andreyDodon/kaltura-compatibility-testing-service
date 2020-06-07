@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Objects;
 
 /**
  * @author andrey.dodon - 27/04/2020
@@ -65,5 +66,22 @@ public class ActionParam {
 
     public void setOptional(String optional) {
         this.optional = optional;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ActionParam that = (ActionParam) o;
+        return paramName.equals(that.paramName) &&
+                paramType.equals(that.paramType) &&
+                Objects.equals(paramDefault, that.paramDefault) &&
+                Objects.equals(paramDescription, that.paramDescription) &&
+                Objects.equals(optional, that.optional);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(paramName, paramType, paramDefault, paramDescription, optional);
     }
 }
