@@ -1,6 +1,7 @@
 package com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaError;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.kaltura.automation.KalturaCompatibilityService.model.KalturaEnum.EnumConst;
 import org.apache.commons.lang3.builder.DiffBuilder;
 import org.apache.commons.lang3.builder.DiffResult;
 import org.apache.commons.lang3.builder.Diffable;
@@ -10,6 +11,7 @@ import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author andrey.dodon - 01/05/2020
@@ -99,17 +101,33 @@ public class KalturaError implements Diffable<KalturaError> {
     @Override
     public DiffResult diff(KalturaError other) {
         DiffBuilder db = new DiffBuilder(this, other, ToStringStyle.SHORT_PREFIX_STYLE)
-                .append("error.name", this.errorName, other.errorName)
-                .append("error.code", this.errorCode, other.errorCode)
-                .append("error.description", this.errorDescription, other.errorDescription)
-                .append("error.code", this.errorMessage, other.errorMessage);
+                .append(String.format("ERROR - error %s name is missing ",
+                        other.errorName), this.errorName, other.errorName)
+                .append(String.format("ERROR - error %s code is missing ",
+                        other.errorName), this.errorCode, other.errorCode)
+                .append(String.format("ERROR - error %s description is missing ",
+                        other.errorName), this.errorDescription, other.errorDescription)
+                .append(String.format("ERROR - error %s message is missing ",
+                        other.errorName), this.errorMessage, other.errorMessage);
         if (other.getErrorParameters().size() > this.getErrorParameters().size()) {
-            db.append("error parameters more than expected", this.errorParameters.size(), other.errorParameters.size());
+            db.append(String.format("WARNING - error %s contains more parameters - (%d) than expected - (%d)",
+                    other.errorName,
+                    other.errorParameters.size(),
+                    this.errorParameters.size() ),
+                    this.errorParameters.stream().map(ErrorParameter::getParameterName).collect(Collectors.joining(",")),
+                    other.errorParameters.stream().map(ErrorParameter::getParameterName).collect(Collectors.joining(",")));
         } else if (other.getErrorParameters().size() < this.getErrorParameters().size()) {
-            db.append("error parameters less than expected", this.errorParameters.size(), other.errorParameters.size());
+            db.append(String.format("ERROR - error %s contains less parameters - (%d) than expected - (%d)",
+                    other.errorName,
+                    other.errorParameters.size(),
+                    this.errorParameters.size() ),
+                    this.errorParameters.stream().map(ErrorParameter::getParameterName).collect(Collectors.joining(",")),
+                    other.errorParameters.stream().map(ErrorParameter::getParameterName).collect(Collectors.joining(",")));
         } else if (this.getErrorParameters().size() == other.getErrorParameters().size()) {
             for (int i = 0; i < this.getErrorParameters().size(); i++) {
-                db.append("error.parameter", this.getErrorParameters().get(i).diff(other.getErrorParameters().get(i)));
+                db.append(String.format("ERROR - error %s parameter is missing ",
+                        other.errorName),
+                        this.getErrorParameters().get(i).diff(other.getErrorParameters().get(i)));
             }
         }
 

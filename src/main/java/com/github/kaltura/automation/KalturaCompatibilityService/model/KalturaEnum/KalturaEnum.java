@@ -70,8 +70,10 @@ public class KalturaEnum implements Diffable<KalturaEnum> {
     @Override
     public DiffResult diff(KalturaEnum other) {
         DiffBuilder db = new DiffBuilder(this, other, ToStringStyle.SHORT_PREFIX_STYLE)
-                .append("enum.name", this.enumName, other.enumName)
-                .append("enum.type", this.enumType, other.enumType);
+                .append(String.format("ERROR - enum %s name is missing ",
+                        other.enumName), this.enumName, other.enumName)
+                .append(String.format("ERROR - error %s type is missing ",
+                        other.enumType), this.enumType, other.enumType);
         if (other.getEnumConsts().size() > this.getEnumConsts().size()) {
             db.append(String.format("WARNING - enum %s contains more constants - (%d) than expected - (%d)",
                     other.enumName,
@@ -88,7 +90,9 @@ public class KalturaEnum implements Diffable<KalturaEnum> {
                     other.enumConsts.stream().map(EnumConst::getConstName).collect(Collectors.joining(",")));
         } else if (this.getEnumConsts().size() == other.getEnumConsts().size()) {
             for (int i = 0; i < this.getEnumConsts().size(); i++) {
-                db.append("ERROR - enum.const", this.getEnumConsts().get(i).diff(other.getEnumConsts().get(i)));
+                db.append(String.format("ERROR - enum %s const is missing ",
+                        other.enumName),
+                        this.getEnumConsts().get(i).diff(other.getEnumConsts().get(i)));
             }
         }
         return db.build();

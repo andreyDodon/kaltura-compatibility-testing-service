@@ -33,7 +33,8 @@ dependencies {
 	implementation 'com.google.guava:guava:29.0-jre'
 	implementation 'com.fasterxml.jackson.module:jackson-module-jsonSchema:2.10.3'
 
-	implementation group: 'de.danielbechler', name: 'java-object-diff', version: '0.95'
+	compile group: 'org.javers', name: 'javers-core', version: '5.9.1'
+
 
 	implementation 'org.springdoc:springdoc-openapi-core:1.1.49'
 	implementation 'org.springdoc:springdoc-openapi-ui:1.1.49'

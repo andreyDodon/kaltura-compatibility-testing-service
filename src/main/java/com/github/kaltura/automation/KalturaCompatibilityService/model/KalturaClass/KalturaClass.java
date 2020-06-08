@@ -95,8 +95,10 @@ public class KalturaClass implements Diffable<KalturaClass> {
     public DiffResult diff(KalturaClass other) {
 
         DiffBuilder db = new DiffBuilder(this, other, ToStringStyle.SHORT_PREFIX_STYLE)
-                .append("class.name", this.className, other.className)
-                .append("class.description", this.classDescription, other.classDescription)
+                .append(String.format("ERROR - class %s name is missing ",
+                        other.className), this.className, other.className)
+                .append(String.format("ERROR - class %s description is missing ",
+                        other.classDescription), this.classDescription, other.classDescription)
                 .append("class.abstract", this.isAbstract, other.isAbstract)
                 .append("class.base", this.base, other.base);
         if (other.getClassProperties().size() > this.getClassProperties().size()) {
@@ -115,7 +117,9 @@ public class KalturaClass implements Diffable<KalturaClass> {
                     other.classProperties.stream().map(ClassProperty::getPropertyName).collect(Collectors.joining(",")));
         } else if (this.getClassProperties().size() == other.getClassProperties().size()) {
             for (int i = 0; i < this.getClassProperties().size(); i++) {
-                db.append("ERROR - class.properties", this.getClassProperties().get(i).diff(other.getClassProperties().get(i)));
+                db.append(String.format("ERROR - class %s property is missing ",
+                        other.className),
+                        this.getClassProperties().get(i).diff(other.getClassProperties().get(i)));
             }
         }
 

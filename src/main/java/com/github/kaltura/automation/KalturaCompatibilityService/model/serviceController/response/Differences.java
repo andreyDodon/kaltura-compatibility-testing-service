@@ -2,31 +2,49 @@ package com.github.kaltura.automation.KalturaCompatibilityService.model.serviceC
 
 public class Differences {
 
-            private String description;
-            private String previousValue;
-            private String currentValue;
+    private String description;
+    private String objectName;
+    private String objectType;
+    private String previousValue;
+    private String currentValue;
 
-            public String getDescription() {
-                return description;
-            }
+    public String getObjectName() {
+        return objectName;
+    }
 
-            public void setDescription(String description) {
-                this.description = description;
-            }
+    public void setObjectName(String objectName) {
+        this.objectName = objectName;
+    }
 
-            public String getPreviousValue() {
-                return previousValue;
-            }
+    public String getObjectType() {
+        return objectType;
+    }
 
-            public void setPreviousValue(String previousValue) {
-                this.previousValue = previousValue;
-            }
+    public void setObjectType(String objectType) {
+        this.objectType = objectType;
+    }
 
-            public String getCurrentValue() {
-                return currentValue;
-            }
+    public String getDescription() {
+        return description;
+    }
 
-            public void setCurrentValue(String currentValue) {
-                this.currentValue = currentValue;
-            }
-        }
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getPreviousValue() {
+        return previousValue;
+    }
+
+    public void setPreviousValue(String previousValue) {
+        this.previousValue = previousValue;
+    }
+
+    public String getCurrentValue() {
+        return currentValue;
+    }
+
+    public void setCurrentValue(String currentValue) {
+        this.currentValue = currentValue;
+    }
+}
