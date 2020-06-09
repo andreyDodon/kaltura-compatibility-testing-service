@@ -138,14 +138,18 @@ public class CompatibilityServiceController {
         Map<String, KalturaService> currServices = currentXml.getKalturaServices()
                 .stream().collect(Collectors.toMap(KalturaService::getServiceName, s -> s));
 
+
         prevServices.forEach((k, v) -> {
 
-            List<ActionResult> prevServiceActionResults = v.getServiceActions().stream()
-                    .map(ServiceAction::getActionResults).collect(Collectors.toList());
+//            List<ActionResult> prevServiceActionResults = v.getServiceActions().stream()
+//                    .map(ServiceAction::getActionResults).collect(Collectors.toList());
 
-            List<ActionResult> currServiceActionResults = currServices.get(k) == null ? Collections.emptyList() :
+            Map<String, ActionResult> prevServiceActionResults = v.getServiceActions().stream()
+                    .collect(Collectors.toMap(ServiceAction::getActionName, ServiceAction::getActionResults));
+
+            Map<String, ActionResult> currServiceActionResults = currServices.get(k) == null ? Collections.emptyMap() :
                     currServices.get(k).getServiceActions().stream()
-                            .map(ServiceAction::getActionResults).collect(Collectors.toList());
+                            .collect(Collectors.toMap(ServiceAction::getActionName, ServiceAction::getActionResults));
 
             checkServiceResponseTypeCompatibility(k, prevServiceActionResults, currServiceActionResults);
 
@@ -232,38 +236,55 @@ public class CompatibilityServiceController {
         }
     }
 
-    private void checkServiceResponseTypeWasntModified(String serviceName, List<ActionResult> currServiceActionResults) {
-        currServiceActionResults.forEach(ar -> {
-            if (warnings.contains(ar.getResultType())) {
+    private void checkServiceResponseTypeWasntModified(String serviceName, Map<String, ActionResult> currServiceActionResults) {
+        currServiceActionResults.forEach((k, v) -> {
+            if (warnings.contains(v.getResultType())) {
                 Differences differences = new Differences();
                 resp.getRed().addAndGet(1);
                 differences.setDescription(
                         String.format("Service '%s' is no longer backward compatible since the result type is modified", serviceName));
-                differences.setObjectName(serviceName);
+                differences.setObjectName(serviceName + "." + k);
                 differences.setObjectType("service result");
-                differences.setPreviousValue(ar.getResultType());
-                differences.setCurrentValue(ar.getResultType());
+                differences.setPreviousValue(v.getResultType());
+                differences.setCurrentValue(v.getResultType());
                 resp.getRedDetails().add(differences);
             }
         });
     }
 
     private void checkServiceResponseTypeCompatibility(String serviceName,
-                                                       List<ActionResult> oldVersion, List<ActionResult> currentVersion) {
+                                                       Map<String, ActionResult> oldVersion, Map<String, ActionResult> currentVersion) {
 
         Javers javers = JaversBuilder.javers().withListCompareAlgorithm(LEVENSHTEIN_DISTANCE).build();
-        Diff diff = javers.compareCollections(oldVersion, currentVersion, ActionResult.class);
-        diff.getChangesByType(ValueChange.class).forEach(c -> {
-            Differences differences = new Differences();
-            resp.getRed().addAndGet(1);
-            differences.setDescription(
-                    String.format("Service '%s' result type changed from '%s' to '%s'", serviceName, c.getLeft(), c.getRight()));
-            differences.setObjectName(c.getLeft().toString());
-            differences.setObjectType("service result");
-            differences.setPreviousValue(c.getLeft().toString());
-            differences.setCurrentValue(c.getRight().toString());
-            resp.getRedDetails().add(differences);
+
+        oldVersion.forEach((k, v) -> {
+            Diff diff = javers.compare(v, currentVersion.get(k));
+            diff.getChangesByType(ValueChange.class).forEach(c -> {
+                Differences differences = new Differences();
+                resp.getRed().addAndGet(1);
+                differences.setDescription(
+                        String.format("Service '%s.%s' result type changed from '%s' to '%s'", serviceName, k, c.getLeft(), c.getRight()));
+                differences.setObjectName(c.getLeft().toString());
+                differences.setObjectType("service result");
+                differences.setPreviousValue(c.getLeft().toString());
+                differences.setCurrentValue(c.getRight().toString());
+                resp.getRedDetails().add(differences);
+            });
         });
+
+//        javers.compare(oldVersion., currentVersion);
+//        Diff diff = javers.compareCollections(oldVersion, currentVersion, ActionResult.class);
+//        diff.getChangesByType(ValueChange.class).forEach(c -> {
+//            Differences differences = new Differences();
+//            resp.getRed().addAndGet(1);
+//            differences.setDescription(
+//                    String.format("Service '%s' result type changed from '%s' to '%s'", serviceName, c.getLeft(), c.getRight()));
+//            differences.setObjectName(c.getLeft().toString());
+//            differences.setObjectType("service result");
+//            differences.setPreviousValue(c.getLeft().toString());
+//            differences.setCurrentValue(c.getRight().toString());
+//            resp.getRedDetails().add(differences);
+//        });
         checkServiceResponseTypeWasntModified(serviceName, currentVersion);
     }
 
