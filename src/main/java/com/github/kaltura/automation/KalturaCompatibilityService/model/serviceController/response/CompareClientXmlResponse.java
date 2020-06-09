@@ -3,6 +3,7 @@ package com.github.kaltura.automation.KalturaCompatibilityService.model.serviceC
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -12,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @JsonPropertyOrder({"previousApiVersion", "currentApiVersion", "red", "yellow", "redDetails", "yellowDetails"})
 public class CompareClientXmlResponse {
 
-    private  List<Differences> redDetails = new ArrayList<>();
+    private LinkedHashSet<Differences> redDetails = new LinkedHashSet<>();
     private  List<Differences> yellowDetails = new ArrayList<>();
     private AtomicInteger yellow = new AtomicInteger(0);
     private AtomicInteger red = new AtomicInteger(0);
@@ -54,11 +55,11 @@ public class CompareClientXmlResponse {
     }
 
 
-    public List<Differences> getRedDetails() {
+    public LinkedHashSet<Differences> getRedDetails() {
         return redDetails;
     }
 
-    public void setRedDetails(List<Differences> redDetails) {
+    public void setRedDetails(LinkedHashSet<Differences> redDetails) {
         this.redDetails = redDetails;
     }
 

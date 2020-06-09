@@ -119,7 +119,7 @@ public class CompatibilityServiceController {
     }
 
     private void analyzeXmls(KalturaXml previousXml, KalturaXml currentXml) throws IOException {
-        checkNoMisses(previousXml, currentXml);
+        //checkNoMisses(previousXml, currentXml);
         analyze(
                 getKalturaErrorsMap(previousXml.getKalturaErrors()),
                 getKalturaErrorsMap(currentXml.getKalturaErrors()));
