@@ -22,8 +22,6 @@ import com.vdurmont.semver4j.Semver;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.builder.Diffable;
-import org.apache.poi.ss.formula.functions.T;
-import org.javers.common.string.PrettyValuePrinter;
 import org.javers.core.Javers;
 import org.javers.core.JaversBuilder;
 import org.javers.core.diff.Diff;
@@ -88,34 +86,49 @@ public class CompatibilityServiceController {
             previousXml = currentXml;
             currentXml = temp;
         }
-
-        xmlConverter.saveKalturaServices(previousXml.getKalturaServices());
-        xmlConverter.saveKalturaErrors(previousXml.getKalturaErrors());
-        xmlConverter.saveKalturaEnums(previousXml.getKalturaEnums());
-        xmlConverter.saveKalturaClasses(previousXml.getKalturaClasses());
+        saveToDb(currentXml);
         return compare(previousXml, currentXml);
 
     }
 
 
+    @GetMapping(path = "/convertXmlToExcel")
+    public ResponseEntity<InputStreamResource> getExcel(@RequestParam URL url) throws IOException {
+        KalturaXml kalturaXml = xmlConverter.xmlToObject(url);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=clientXml_" + kalturaXml.getApiVersion() + ".xlsx")
+                .body(new InputStreamResource(excelUtils.parseXmlToExcel(kalturaXml)));
+
+    }
+
+
+    private void saveToDb(KalturaXml kalturaXml) {
+        xmlConverter.saveKalturaServices(kalturaXml.getKalturaServices());
+        xmlConverter.saveKalturaErrors(kalturaXml.getKalturaErrors());
+        xmlConverter.saveKalturaEnums(kalturaXml.getKalturaEnums());
+        xmlConverter.saveKalturaClasses(kalturaXml.getKalturaClasses());
+    }
+
+
     public CompareClientXmlResponse compare(KalturaXml previousXml, KalturaXml currentXml) throws IOException {
+        resp.setPreviousApiVersion(previousXml.getApiVersion());
+        resp.setCurrentApiVersion(currentXml.getApiVersion());
         analyzeXmls(previousXml, currentXml);
         return resp;
     }
 
     private void analyzeXmls(KalturaXml previousXml, KalturaXml currentXml) throws IOException {
-        resp.setPreviousApiVersion(previousXml.getApiVersion());
-        resp.setCurrentApiVersion(currentXml.getApiVersion());
         checkNoMisses(previousXml, currentXml);
         analyze(
                 getKalturaErrorsMap(previousXml.getKalturaErrors()),
-                getKalturaErrorsMap(currentXml.getKalturaErrors()), resp);
+                getKalturaErrorsMap(currentXml.getKalturaErrors()));
         analyze(
                 getKalturaEnumsMap(previousXml.getKalturaEnums()),
-                getKalturaEnumsMap(currentXml.getKalturaEnums()), resp);
+                getKalturaEnumsMap(currentXml.getKalturaEnums()));
         analyze(
                 getKalturaClassesMap(previousXml.getKalturaClasses()),
-                getKalturaClassesMap(currentXml.getKalturaClasses()), resp);
+                getKalturaClassesMap(currentXml.getKalturaClasses()));
         checkServices(previousXml, currentXml);
     }
 
@@ -134,7 +147,7 @@ public class CompatibilityServiceController {
                     currServices.get(k).getServiceActions().stream()
                             .map(ServiceAction::getActionResults).collect(Collectors.toList());
 
-            checkServiceResponseTypeCompatibility(resp, k, prevServiceActionResults, currServiceActionResults);
+            checkServiceResponseTypeCompatibility(k, prevServiceActionResults, currServiceActionResults);
 
         });
     }
@@ -149,7 +162,7 @@ public class CompatibilityServiceController {
     private void checkNoMissingServices(KalturaXml previousXml, KalturaXml currentXml) {
         ArrayList<KalturaService> list = new ArrayList<>(CollectionUtils.subtract(previousXml.getKalturaServices(),
                 currentXml.getKalturaServices()));
-        if(!list.isEmpty()){
+        if (!list.isEmpty()) {
             list.forEach(r -> {
                 Differences differences = new Differences();
                 differences.setDescription(
@@ -167,7 +180,7 @@ public class CompatibilityServiceController {
     private void checkNoMissingClasses(KalturaXml previousXml, KalturaXml currentXml) {
         ArrayList<KalturaClass> list = new ArrayList<>(CollectionUtils.subtract(previousXml.getKalturaClasses(),
                 currentXml.getKalturaClasses()));
-        if(!list.isEmpty()){
+        if (!list.isEmpty()) {
             list.forEach(r -> {
                 Differences differences = new Differences();
                 differences.setDescription(
@@ -185,7 +198,7 @@ public class CompatibilityServiceController {
     private void checkNoMissingEnums(KalturaXml previousXml, KalturaXml currentXml) {
         ArrayList<KalturaEnum> list = new ArrayList<>(CollectionUtils.subtract(previousXml.getKalturaEnums(),
                 currentXml.getKalturaEnums()));
-        if(!list.isEmpty()){
+        if (!list.isEmpty()) {
             list.forEach(r -> {
                 Differences differences = new Differences();
                 differences.setDescription(
@@ -204,7 +217,7 @@ public class CompatibilityServiceController {
     private void checkNoMissingErrors(KalturaXml previousXml, KalturaXml currentXml) {
         ArrayList<KalturaError> list = new ArrayList<>(CollectionUtils.subtract(previousXml.getKalturaErrors(),
                 currentXml.getKalturaErrors()));
-        if(!list.isEmpty()){
+        if (!list.isEmpty()) {
             list.forEach(r -> {
                 Differences differences = new Differences();
                 differences.setDescription(
@@ -219,9 +232,9 @@ public class CompatibilityServiceController {
         }
     }
 
-    private void checkServiceResponseTypeWasntModified(CompareClientXmlResponse resp, String serviceName, List<ActionResult> currServiceActionResults) {
+    private void checkServiceResponseTypeWasntModified(String serviceName, List<ActionResult> currServiceActionResults) {
         currServiceActionResults.forEach(ar -> {
-            if(warnings.contains(ar.getResultType())){
+            if (warnings.contains(ar.getResultType())) {
                 Differences differences = new Differences();
                 resp.getRed().addAndGet(1);
                 differences.setDescription(
@@ -235,7 +248,7 @@ public class CompatibilityServiceController {
         });
     }
 
-    private void checkServiceResponseTypeCompatibility(CompareClientXmlResponse resp, String serviceName,
+    private void checkServiceResponseTypeCompatibility(String serviceName,
                                                        List<ActionResult> oldVersion, List<ActionResult> currentVersion) {
 
         Javers javers = JaversBuilder.javers().withListCompareAlgorithm(LEVENSHTEIN_DISTANCE).build();
@@ -244,19 +257,18 @@ public class CompatibilityServiceController {
             Differences differences = new Differences();
             resp.getRed().addAndGet(1);
             differences.setDescription(
-                    String.format("Service '%s' result type changed from '%s' to '%s'",serviceName, c.getLeft(), c.getRight()));
+                    String.format("Service '%s' result type changed from '%s' to '%s'", serviceName, c.getLeft(), c.getRight()));
             differences.setObjectName(c.getLeft().toString());
             differences.setObjectType("service result");
             differences.setPreviousValue(c.getLeft().toString());
             differences.setCurrentValue(c.getRight().toString());
             resp.getRedDetails().add(differences);
         });
-        checkServiceResponseTypeWasntModified(resp, serviceName, currentVersion);
+        checkServiceResponseTypeWasntModified(serviceName, currentVersion);
     }
 
 
-    public void analyze(Map<String, Diffable> map1, Map<String, Diffable> map2,
-                        CompareClientXmlResponse response) {
+    public void analyze(Map<String, Diffable> map1, Map<String, Diffable> map2) {
         Maps.difference(map1, map2).entriesDiffering().forEach((k, v) -> {
             v.leftValue().diff(v.rightValue()).forEach(d -> {
                 Differences differences = new Differences();
@@ -264,17 +276,17 @@ public class CompatibilityServiceController {
                 differences.setPreviousValue(d.getLeft().toString());
                 differences.setCurrentValue(d.getRight().toString());
                 if (d.getFieldName().contains("WARNING")) {
-                    response.getYellow().addAndGet(1);
+                    resp.getYellow().addAndGet(1);
                     differences.setObjectType(d.getFieldName().split("\\s+")[2]);
                     differences.setObjectName(d.getFieldName().split("\\s+")[3]);
-                    response.getYellowDetails().add(differences);
+                    resp.getYellowDetails().add(differences);
                     warnings.add(d.getFieldName().split("\\s+")[3]);
                 } else if (d.getFieldName().contains("ERROR")) {
-                    response.getRed().addAndGet(1);
+                    resp.getRed().addAndGet(1);
                     differences.setObjectType(
-                            d.getFieldName().split("\\s+")[2]+" "+d.getFieldName().split("\\s+")[4]);
+                            d.getFieldName().split("\\s+")[2] + " " + d.getFieldName().split("\\s+")[4]);
                     differences.setObjectName(d.getFieldName().split("\\s+")[3]);
-                    response.getRedDetails().add(differences);
+                    resp.getRedDetails().add(differences);
                 }
             });
         });
@@ -285,10 +297,6 @@ public class CompatibilityServiceController {
         return kalturaEnums.stream().collect(Collectors.toMap(KalturaEnum::getEnumName, e -> e));
     }
 
-    private Map<String, Diffable> getKalturaServicesMap(List<KalturaService> kalturaServices) throws IOException {
-        return kalturaServices.stream().collect(Collectors.toMap(KalturaService::getServiceName, s -> s));
-    }
-
     private Map<String, Diffable> getKalturaClassesMap(List<KalturaClass> kalturaClasses) throws IOException {
         return kalturaClasses.stream().collect(Collectors.toMap(KalturaClass::getClassName, c -> c));
     }
@@ -297,15 +305,5 @@ public class CompatibilityServiceController {
         return kalturaErrors.stream().collect(Collectors.toMap(KalturaError::getErrorName, e -> e));
     }
 
-
-    @GetMapping(path = "/convertXmlToExcel")
-    public ResponseEntity<InputStreamResource> getExcel(@RequestParam URL url) throws IOException {
-        KalturaXml kalturaXml = xmlConverter.xmlToObject(url);
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=clientXml_" + kalturaXml.getApiVersion() + ".xlsx")
-                .body(new InputStreamResource(excelUtils.parseXmlToExcel(kalturaXml)));
-
-    }
 
 }
