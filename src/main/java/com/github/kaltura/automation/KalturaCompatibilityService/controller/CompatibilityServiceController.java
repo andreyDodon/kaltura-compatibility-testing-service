@@ -99,12 +99,14 @@ public class CompatibilityServiceController {
 
 
     public CompareClientXmlResponse compare(KalturaXml previousXml, KalturaXml currentXml) throws IOException {
+        analyzeXmls(previousXml, currentXml);
+        return resp;
+    }
 
+    private void analyzeXmls(KalturaXml previousXml, KalturaXml currentXml) throws IOException {
         resp.setPreviousApiVersion(previousXml.getApiVersion());
         resp.setCurrentApiVersion(currentXml.getApiVersion());
-
         checkNoMisses(previousXml, currentXml);
-
         analyze(
                 getKalturaErrorsMap(previousXml.getKalturaErrors()),
                 getKalturaErrorsMap(currentXml.getKalturaErrors()), resp);
@@ -114,16 +116,17 @@ public class CompatibilityServiceController {
         analyze(
                 getKalturaClassesMap(previousXml.getKalturaClasses()),
                 getKalturaClassesMap(currentXml.getKalturaClasses()), resp);
+        checkServices(previousXml, currentXml);
+    }
 
-
-
+    private void checkServices(KalturaXml previousXml, KalturaXml currentXml) {
         Map<String, KalturaService> prevServices = previousXml.getKalturaServices()
                 .stream().collect(Collectors.toMap(KalturaService::getServiceName, s -> s));
         Map<String, KalturaService> currServices = currentXml.getKalturaServices()
                 .stream().collect(Collectors.toMap(KalturaService::getServiceName, s -> s));
 
         prevServices.forEach((k, v) -> {
-            
+
             List<ActionResult> prevServiceActionResults = v.getServiceActions().stream()
                     .map(ServiceAction::getActionResults).collect(Collectors.toList());
 
@@ -134,8 +137,6 @@ public class CompatibilityServiceController {
             checkServiceResponseTypeCompatibility(resp, k, prevServiceActionResults, currServiceActionResults);
 
         });
-
-        return resp;
     }
 
     private void checkNoMisses(KalturaXml previousXml, KalturaXml currentXml) {
@@ -153,7 +154,7 @@ public class CompatibilityServiceController {
                 Differences differences = new Differences();
                 differences.setDescription(
                         String.format("The current client is missing a %s service", r.getServiceName()));
-                differences.setObjectName(r.getServiceName() +"(service)");
+                differences.setObjectName(r.getServiceName());
                 differences.setObjectType("service");
                 differences.setPreviousValue(r.getServiceName());
                 differences.setCurrentValue("NONE");
@@ -171,7 +172,7 @@ public class CompatibilityServiceController {
                 Differences differences = new Differences();
                 differences.setDescription(
                         String.format("The current client is missing a %s class", r.getClassName()));
-                differences.setObjectName(r.getClassName() +"(class)");
+                differences.setObjectName(r.getClassName());
                 differences.setObjectType("class");
                 differences.setPreviousValue(r.getClassName());
                 differences.setCurrentValue("NONE");
@@ -189,7 +190,7 @@ public class CompatibilityServiceController {
                 Differences differences = new Differences();
                 differences.setDescription(
                         String.format("The current client is missing a %s enum", r.getEnumName()));
-                differences.setObjectName(r.getEnumName() +"(enum)");
+                differences.setObjectName(r.getEnumName());
                 differences.setObjectType("enum");
                 differences.setPreviousValue(r.getEnumName());
                 differences.setCurrentValue("NONE");
@@ -208,7 +209,7 @@ public class CompatibilityServiceController {
                 Differences differences = new Differences();
                 differences.setDescription(
                         String.format("The current client is missing a %s error", r.getErrorName()));
-                differences.setObjectName(r.getErrorName() +"(error)");
+                differences.setObjectName(r.getErrorName());
                 differences.setObjectType("error");
                 differences.setPreviousValue(r.getErrorName());
                 differences.setCurrentValue("NONE");
@@ -225,7 +226,7 @@ public class CompatibilityServiceController {
                 resp.getRed().addAndGet(1);
                 differences.setDescription(
                         String.format("Service '%s' is no longer backward compatible since the result type is modified", serviceName));
-                differences.setObjectName(serviceName +"(service)");
+                differences.setObjectName(serviceName);
                 differences.setObjectType("service result");
                 differences.setPreviousValue(ar.getResultType());
                 differences.setCurrentValue(ar.getResultType());
