@@ -20,7 +20,6 @@ import com.github.kaltura.automation.KalturaCompatibilityService.utils.serializa
 import com.google.common.collect.Maps;
 import com.vdurmont.semver4j.Semver;
 import io.swagger.v3.oas.models.OpenAPI;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.builder.Diffable;
 import org.javers.core.Javers;
 import org.javers.core.JaversBuilder;
@@ -141,8 +140,6 @@ public class CompatibilityServiceController {
 
         prevServices.forEach((k, v) -> {
 
-//            List<ActionResult> prevServiceActionResults = v.getServiceActions().stream()
-//                    .map(ServiceAction::getActionResults).collect(Collectors.toList());
 
             Map<String, ActionResult> prevServiceActionResults = v.getServiceActions().stream()
                     .collect(Collectors.toMap(ServiceAction::getActionName, ServiceAction::getActionResults));
@@ -156,85 +153,6 @@ public class CompatibilityServiceController {
         });
     }
 
-    private void checkNoMisses(KalturaXml previousXml, KalturaXml currentXml) {
-        checkNoMissingServices(previousXml, currentXml);
-        checkNoMissingClasses(previousXml, currentXml);
-        checkNoMissingEnums(previousXml, currentXml);
-        checkNoMissingErrors(previousXml, currentXml);
-    }
-
-    private void checkNoMissingServices(KalturaXml previousXml, KalturaXml currentXml) {
-        ArrayList<KalturaService> list = new ArrayList<>(CollectionUtils.subtract(previousXml.getKalturaServices(),
-                currentXml.getKalturaServices()));
-        if (!list.isEmpty()) {
-            list.forEach(r -> {
-                Differences differences = new Differences();
-                differences.setDescription(
-                        String.format("The current client is missing a %s service", r.getServiceName()));
-                differences.setObjectName(r.getServiceName());
-                differences.setObjectType("service");
-                differences.setPreviousValue(r.getServiceName());
-                differences.setCurrentValue("NONE");
-                resp.getRed().addAndGet(1);
-                resp.getRedDetails().add(differences);
-            });
-        }
-    }
-
-    private void checkNoMissingClasses(KalturaXml previousXml, KalturaXml currentXml) {
-        ArrayList<KalturaClass> list = new ArrayList<>(CollectionUtils.subtract(previousXml.getKalturaClasses(),
-                currentXml.getKalturaClasses()));
-        if (!list.isEmpty()) {
-            list.forEach(r -> {
-                Differences differences = new Differences();
-                differences.setDescription(
-                        String.format("The current client is missing a %s class", r.getClassName()));
-                differences.setObjectName(r.getClassName());
-                differences.setObjectType("class");
-                differences.setPreviousValue(r.getClassName());
-                differences.setCurrentValue("NONE");
-                resp.getRed().addAndGet(1);
-                resp.getRedDetails().add(differences);
-            });
-        }
-    }
-
-    private void checkNoMissingEnums(KalturaXml previousXml, KalturaXml currentXml) {
-        ArrayList<KalturaEnum> list = new ArrayList<>(CollectionUtils.subtract(previousXml.getKalturaEnums(),
-                currentXml.getKalturaEnums()));
-        if (!list.isEmpty()) {
-            list.forEach(r -> {
-                Differences differences = new Differences();
-                differences.setDescription(
-                        String.format("The current client is missing a %s enum", r.getEnumName()));
-                differences.setObjectName(r.getEnumName());
-                differences.setObjectType("enum");
-                differences.setPreviousValue(r.getEnumName());
-                differences.setCurrentValue("NONE");
-                resp.getRed().addAndGet(1);
-                resp.getRedDetails().add(differences);
-            });
-        }
-    }
-
-
-    private void checkNoMissingErrors(KalturaXml previousXml, KalturaXml currentXml) {
-        ArrayList<KalturaError> list = new ArrayList<>(CollectionUtils.subtract(previousXml.getKalturaErrors(),
-                currentXml.getKalturaErrors()));
-        if (!list.isEmpty()) {
-            list.forEach(r -> {
-                Differences differences = new Differences();
-                differences.setDescription(
-                        String.format("The current client is missing a %s error", r.getErrorName()));
-                differences.setObjectName(r.getErrorName());
-                differences.setObjectType("error");
-                differences.setPreviousValue(r.getErrorName());
-                differences.setCurrentValue("NONE");
-                resp.getRed().addAndGet(1);
-                resp.getRedDetails().add(differences);
-            });
-        }
-    }
 
     private void checkServiceResponseTypeWasntModified(String serviceName, Map<String, ActionResult> currServiceActionResults) {
         currServiceActionResults.forEach((k, v) -> {
@@ -244,7 +162,7 @@ public class CompatibilityServiceController {
                 differences.setDescription(
                         String.format("Service %s action %s is no longer backward compatible since the result type is modified", serviceName, k));
                 differences.setObjectName(serviceName + "." + k);
-                differences.setObjectType("service result");
+                differences.setObjectType("service");
                 differences.setPreviousValue(v.getResultType());
                 differences.setCurrentValue(v.getResultType());
                 resp.getRedDetails().add(differences);
@@ -265,26 +183,13 @@ public class CompatibilityServiceController {
                 differences.setDescription(
                         String.format("Service '%s.%s' result type changed from '%s' to '%s'", serviceName, k, c.getLeft(), c.getRight()));
                 differences.setObjectName(c.getLeft().toString());
-                differences.setObjectType("service result");
+                differences.setObjectType("service");
                 differences.setPreviousValue(c.getLeft().toString());
                 differences.setCurrentValue(c.getRight().toString());
                 resp.getRedDetails().add(differences);
             });
         });
 
-//        javers.compare(oldVersion., currentVersion);
-//        Diff diff = javers.compareCollections(oldVersion, currentVersion, ActionResult.class);
-//        diff.getChangesByType(ValueChange.class).forEach(c -> {
-//            Differences differences = new Differences();
-//            resp.getRed().addAndGet(1);
-//            differences.setDescription(
-//                    String.format("Service '%s' result type changed from '%s' to '%s'", serviceName, c.getLeft(), c.getRight()));
-//            differences.setObjectName(c.getLeft().toString());
-//            differences.setObjectType("service result");
-//            differences.setPreviousValue(c.getLeft().toString());
-//            differences.setCurrentValue(c.getRight().toString());
-//            resp.getRedDetails().add(differences);
-//        });
         checkServiceResponseTypeWasntModified(serviceName, currentVersion);
     }
 
@@ -304,8 +209,7 @@ public class CompatibilityServiceController {
                     warnings.add(d.getFieldName().split("\\s+")[3]);
                 } else if (d.getFieldName().contains("ERROR")) {
                     resp.getRed().addAndGet(1);
-                    differences.setObjectType(
-                            d.getFieldName().split("\\s+")[2] + " " + d.getFieldName().split("\\s+")[4]);
+                    differences.setObjectType(d.getFieldName().split("\\s+")[2]);
                     differences.setObjectName(d.getFieldName().split("\\s+")[3]);
                     resp.getRedDetails().add(differences);
                 }
