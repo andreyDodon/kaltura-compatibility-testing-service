@@ -162,7 +162,7 @@ public class CompatibilityServiceController {
                 differences.setDescription(
                         String.format("Service %s action %s is no longer backward compatible since the result type is modified", serviceName, k));
                 differences.setObjectName(serviceName + "." + k);
-                differences.setObjectType("service");
+                differences.setObjectType("service result");
                 differences.setPreviousValue(v.getResultType());
                 differences.setCurrentValue(v.getResultType());
                 resp.getRedDetails().add(differences);
@@ -183,7 +183,7 @@ public class CompatibilityServiceController {
                 differences.setDescription(
                         String.format("Service '%s.%s' result type changed from '%s' to '%s'", serviceName, k, c.getLeft(), c.getRight()));
                 differences.setObjectName(c.getLeft().toString());
-                differences.setObjectType("service");
+                differences.setObjectType("service result");
                 differences.setPreviousValue(c.getLeft().toString());
                 differences.setCurrentValue(c.getRight().toString());
                 resp.getRedDetails().add(differences);
