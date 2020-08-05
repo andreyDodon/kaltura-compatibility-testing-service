@@ -117,8 +117,7 @@ public class KalturaClass implements Diffable<KalturaClass> {
                     other.classProperties.stream().map(ClassProperty::getPropertyName).collect(Collectors.joining(",")));
         } else if (this.getClassProperties().size() == other.getClassProperties().size()) {
             for (int i = 0; i < this.getClassProperties().size(); i++) {
-                db.append(String.format("WARNING - class %s property is modified",
-                        other.className),
+                db.append(String.format("WARNING - class %s property is modified", other.className),
                         this.getClassProperties().get(i).diff(other.getClassProperties().get(i)));
             }
         }
