@@ -102,6 +102,12 @@ public class CompatibilityServiceController {
     }
 
 
+    @GetMapping(path = "/whoami")
+    public String whoami() throws IOException {
+        return "Latest - 100720";
+    }
+
+
     private void saveToDb(KalturaXml kalturaXml) {
         xmlConverter.saveKalturaServices(kalturaXml.getKalturaServices());
         xmlConverter.saveKalturaErrors(kalturaXml.getKalturaErrors());
